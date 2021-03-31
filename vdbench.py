@@ -19,7 +19,7 @@ path_ = os.path.abspath("../../../Interface/REST")
 sys.path.insert(0, path_)
 from ILDC import ILDC
 sys.path.insert(0, os.path.abspath("../../../Lib/VdBenchLib"))
-from error_log import LogCreat
+from error_log import LogCreate
 
 class VdBenchRun():
     '''
@@ -40,18 +40,24 @@ class VdBenchRun():
         '''
         This method execute workload of VdBench tool.
         Arguments (str, str, int): vd_name, workload,diskindex
+        
         Return: None
         '''
-        workload_path, result_path = self.create_file('4-4k-4-fill.vdb', vd_name,diskindex, workload)
+        file_name = '4-4k-4-fill.vdb'
+        workload_path, result_path = self.create_file(file_name, vd_name,diskindex, workload)
         self.run_workload(workload_path, result_path,vd_name,workload)
         if workload.strip() == 'VDI':
-            workload_path, result_path = self.create_file('vdi_fill.vdb', vd_name,diskindex,workload)
+            file_name = 'vdi_fill.vdb'
+            workload_path, result_path = self.create_file(file_name, vd_name,diskindex,workload)
         elif workload.strip() == 'VSI':
-            workload_path, result_path = self.create_file('vsi_fill.vdb', vd_name,diskindex,workload)
+            file_name = 'vsi_fill.vdb'
+            workload_path, result_path = self.create_file(file_name, vd_name,diskindex,workload)
         elif workload.strip() == 'ORACLE':
-            workload_path, result_path = self.create_file('oracle_fill.vdb', vd_name,diskindex,workload)
+            file_name = 'oracle_fill.vdb'
+            workload_path, result_path = self.create_file(file_name, vd_name,diskindex,workload)
         else:
-            workload_path, result_path = self.create_file('sql_fill.vdb', vd_name,diskindex,workload)
+            file_name = 'sql_fill.vdb'
+            workload_path, result_path = self.create_file(file_name, vd_name,diskindex,workload)
         self.run_workload(workload_path, result_path,vd_name, workload)
 
     def run_workload(self, workload_path, result_path, vd_name, workload):
@@ -78,12 +84,12 @@ class VdBenchRun():
         if 'Vdbench execution completed successfully' in out:
             if '4-4k-4-fill' not in result_path:
                 msg = workload.upper() + ' workload executed sucessfully'
-                LogCreat().logger_info.info(msg)
+                LogCreate().logger_info.info(msg)
                 new_path = os.path.join(result_path, "flatfile.html")
                 ResultCreation().read_result(new_path, vd_name, workload, self.new_)
             else:
                 msg = '4-4k-4-fill workload executed sucessfully'
-                LogCreat().logger_info.info(msg)
+                LogCreate().logger_info.info(msg)
     def create_file(self,file_name,vd_name,diskindex,workload):
         '''
         This method create dynamic folder structure to store
@@ -102,17 +108,19 @@ class VdBenchRun():
         else:
             result_path = self.new_+vd_name+'/'+vd_name+'_'+file_name.split('.')[0]
         workload_path = os.path.join(workload_path, file_name)
-        file = open(workload_path, "r+")
-        data = file.readlines()
-        file.close()
+        with open(workload_path) as file:
+            # file = open(workload_path, "r+")
+            data = file.readlines()
+            file.close()
         for index,val in enumerate(data):
             split_ = val.split('PhysicalDrive')
             if len(split_) > 1:
                 data[index] = split_[0] + "PhysicalDrive" + str(diskindex)+"\n"
-        file = open(workload_path, "w")
-        for _ in data:
-            file.write(_)
-        file.close()
+        with open(workload_path, 'w') as file:
+        # file = open(workload_path, "w")
+            for _ in data:
+                file.write(_)
+            file.close()
         return workload_path, result_path
 
 class ResultCreation():
@@ -145,10 +153,10 @@ class ResultCreation():
         ram = res.json()[0]['TotalSystemMemory']['Value']
         ram_ = str(round(int(ram)/1073741824,2))
         ram_ =ram_ + ' GB'
-        available = res.json()[0]['AvailableSystemMemory']['Value']
+        available_memory = res.json()[0]['AvailableSystemMemory']['Value']
         sync = res.json()[0]['IldcConfigurationData']['IldcSyncMode']
         primaycach = res.json()[0]['IldcConfigurationData']['IldcPrimaryCacheMode']
-        ssy = int(ram) - int(available)
+        ssy = int(ram) - int(available_memory)
         ssy = (round((ssy)/1073741824,2))
         ssy = str(ssy) + ' GB'
         if self.merge_list[0] != '-':
@@ -157,8 +165,9 @@ class ResultCreation():
             zfs = zfs + ' GB'
         else:
             zfs = '-'
+        vd_size = '500GB'
         self.data_put = [self.build, host,str(zfs),
-                         str(ssy), primaycach, ram_ , sync, '500GB']
+                         str(ssy), primaycach, ram_ , sync, vd_size]
     def run(self):
         '''
         This method create dynamic folder structure to store results
@@ -169,7 +178,6 @@ class ResultCreation():
         configur = ConfigParser()
         configur.read(r"../../../Config/VdBench_config/VDBench_config.ini")
         self.time_stamp = configur.get('first run', 'start')
-        print('++++++++++++++++', self.result_path)
         self.destiny = self.result_path+ self.build+'.html'
         if configur.get('first run', 'run') == 'False':
             pat = os.path.abspath(r"../../../HTML_Template/VdBench_Template.html")
@@ -177,7 +185,6 @@ class ResultCreation():
         else:
             pat = os.path.abspath(r"../../../Result/Vdbench")
             self.path = self.result_path+ self.build+'.html'
-            print('self.pathself.pathself.path',self.path)
         self.destiny = self.result_path+ self.build+'.html'
     def read_result(self,new_path,vd_name, workload, result_path):
         '''
@@ -186,8 +193,10 @@ class ResultCreation():
         Return: None
         '''
         self.result_path = result_path
-        file1 = open(new_path,"r+")
-        list_lines = file1.readlines()
+        with open(new_path) as file1:
+        # file1 = open(new_path,"r+")
+            list_lines = file1.readlines()
+            file1.close()
         list_data = [0,0,0]
         flag = 0
         for _ in list_lines:
@@ -207,9 +216,9 @@ class ResultCreation():
         self.start_update_html(vd_name, workload)
     def zfs_data(self):
         '''
-        Thismethod read ZFS data.
+        This method read ZFS data.
         Arguments : None
-        Return: None
+        Return (float, float, float, float): os_mem, ddt, comp, dedup
         '''
         try:
             process = subprocess.Popen('cmd.exe', stdin=subprocess.PIPE,
@@ -250,7 +259,7 @@ class ResultCreation():
             os_mem = str(round(int(os_mem)/1073741824,2))
             return os_mem, ddt, comp, dedup
         except Exception as error:
-            LogCreat().logger_error.error(error)
+            LogCreate().logger_error.error(error)
     def first_temp(self):
         '''
         This method update title of HTML page
@@ -287,7 +296,7 @@ class ResultCreation():
             self.first_temp()
         print('************************'\
               'VdBench Result Creation Started************************\n')
-        LogCreat().logger_info.info('************************'\
+        LogCreate().logger_info.info('************************'\
                                     'VdBench Result Creation Started************************')
         update = '<td class="u-border-1 u-border-grey-30 u-table-cell u-table-cell-'
         file1 = open(self.path,"r+")
@@ -326,9 +335,9 @@ class ResultCreation():
                 file.write("%s\n" % item)
         file.close()
         msg = self.build + ' Result created succesfully'
-        LogCreat().logger_info.info(msg)
+        LogCreate().logger_info.info(msg)
         # except Exception as error:
-        #     LogCreat().logger_error.error(error)
+        #     LogCreate().logger_error.error(error)
     def update_lines(self, workload, virtualdisk):
         '''
         This method append all results in HTML page

@@ -12,9 +12,8 @@ Description	:	This script used to log the steps of vdbench
 """
 import logging
 from configparser import ConfigParser
-class LogCreat():
+class LogCreate():
     '''
-    Class:- LogCreat
     This class is going to set levels for vdbench logging (INFO, ERROR)
     and will update details according to level
     Arguments : None

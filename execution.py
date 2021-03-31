@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath("../../../Interface/REST"))
 from ILDC import ILDC
 from Disks import Disks
 sys.path.insert(0, os.path.abspath("../../../Lib/VdBenchLib"))
-from error_log import LogCreat
+from error_log import LogCreate
 from vdbench import VdBenchRun
 
 class Test_ILDC:
@@ -68,10 +68,10 @@ class Test_ILDC:
         if len(pd_data) != 0:
             self.pd_ids = {x['DiskIndex']:x["Id"] for x in pd_data if x['Partitioned'] == False}
             msg = "Found %d physical disks in server group" % len(self.pd_ids)
-            LogCreat().logger_info.info(msg)
+            LogCreate().logger_info.info(msg)
         else:
             msg = "No Physical disks found"
-            LogCreat().logger_error.error(msg)
+            LogCreate().logger_error.error(msg)
         return self.pd_ids
     def read_config(self):
         '''
@@ -102,7 +102,7 @@ class Test_ILDC:
             if int(_) not in pd_ids.keys():
                 msg = 'Disk index '+str(_)+ ' Already used by other process'
                 print(msg)
-                LogCreat().logger_error.error(msg)
+                LogCreate().logger_error.error(msg)
                 flag = 1
             else:
                 if _ in self.config_dict['co disk']:
@@ -125,7 +125,7 @@ class Test_ILDC:
         self.file.close()
         if data == []:
             msg = 'There is nothing to perform plz give vdbench configuration'
-            LogCreat().logger_info.info(msg)
+            LogCreate().logger_info.info(msg)
         else:
             virtual_disk = data[0].split()
             vd_name = virtual_disk[0]
@@ -147,7 +147,7 @@ class Test_ILDC:
         if flag_run == 1:
             print('************************'\
                   'Test Started************************\n')
-            LogCreat().logger_info.info('************************'\
+            LogCreate().logger_info.info('************************'\
                                         'Test Started************************')
             time.sleep(10)
             if vd_name.lower() != "standard":
@@ -169,13 +169,13 @@ class Test_ILDC:
             time.sleep(5)
             print('************************'\
                   'VdBench Execution Started************************\n')
-            LogCreat().logger_info.info('************************'\
+            LogCreate().logger_info.info('************************'\
                                         'VdBench Execution Started************************')
             VdBenchRun().run(vd_name, workload, diskindex)
             print('Result creation completed')
             print('************************'\
                   'Setup Cleanup Started************************\n')
-            LogCreat().logger_info.info('************************'\
+            LogCreate().logger_info.info('************************'\
                                         'Setup Cleanup Started************************')
             self.un_server_vd()
             time.sleep(25)
@@ -188,7 +188,7 @@ class Test_ILDC:
                 time.sleep(30)
             print('************************'\
                   'VdBench Execution Completed************************\n')
-            LogCreat().logger_info.info('************************'\
+            LogCreate().logger_info.info('************************'\
                                         'VdBench Execution Completed************************')
     def verification(self,res_json, msg):
         '''
@@ -199,14 +199,14 @@ class Test_ILDC:
         try:
             if 'ErrorCode' not in res_json.keys():
                 self.test_status = "Pass"
-                LogCreat().logger_info.info(msg)
+                LogCreate().logger_info.info(msg)
                 print(msg)
             else:
                 self.test_status = "Fail"
                 print(res_json['Message'])
-                LogCreat().logger_error.error(res_json['Message'])
+                LogCreate().logger_error.error(res_json['Message'])
         except:
-            LogCreat().logger_error.error(res_json['Message'])
+            LogCreate().logger_error.error(res_json['Message'])
         return self.test_status
     def test_enable_cap_opt_at_server(self):
         '''
@@ -261,7 +261,7 @@ class Test_ILDC:
         res = ILDC().do_create_pool(uri, header=None, payload=payload_dict)
         msg = "Disks are added to Diskpool"
         if str(res) == '<Response [200]>':
-            LogCreat().logger_info.info(msg)
+            LogCreate().logger_info.info(msg)
         else:
             self.verification(res.json(), msg)
     def reclamination(self):
@@ -290,7 +290,7 @@ class Test_ILDC:
         self.server_id = res.json()[0]['Id']
         msg = 'Get server details'
         if str(res) == '<Response [200]>':
-            LogCreat().logger_info.info(msg)
+            LogCreate().logger_info.info(msg)
         else:
             self.verification(res.json(), msg)
     def get_host(self):
@@ -303,7 +303,7 @@ class Test_ILDC:
         res = ILDC().do_ssy_details(uri, header=None)
         msg = 'Get host details'
         if str(res) == '<Response [200]>':
-            LogCreat().logger_info.info(msg)
+            LogCreate().logger_info.info(msg)
         else:
             self.verification(res.json(), msg)
     def test_disable_cap_opt_at_server(self):
@@ -332,7 +332,7 @@ class Test_ILDC:
         msg = "Diskpool deleted successfully"
         if str(res) == '<Response [200]>':
             print(msg)
-            LogCreat().logger_info.info(msg)
+            LogCreate().logger_info.info(msg)
         else:
             self.verification(res.json(), msg)
     def test_create_virtual_disk(self, virtual_disk):
@@ -356,7 +356,7 @@ class Test_ILDC:
         msg = "Virtual disk created successfully"
         if str(res) == '<Response [200]>':
             print(msg)
-            LogCreat().logger_info.info(msg)
+            LogCreate().logger_info.info(msg)
         else:
             self.verification(json.loads(res.content), msg)
         res = json.loads(res.content)
@@ -385,21 +385,9 @@ class Test_ILDC:
             msg = virtual_disk + " property enable at virtual disk level"
             if str(res) == '<Response [200]>':
                 print(msg)
-                LogCreat().logger_info.info(msg)
+                LogCreate().logger_info.info(msg)
             else:
                 self.verification(res.json(), msg)
-        '''
-        else:
-            payload["EncryptionEnabled"] = True
-            uri = "virtualdisks/" + self.vd_id
-            res = ILDC().do_enable_cap_opt_on_vd(uri, header=None, payload=payload)
-            msg = virtual_disk + " property enable at virtual disk level"
-            if str(res) == '<Response [200]>':
-                print(msg)
-                LogCreat().logger_info.info(msg)
-            else:
-                self.verification(res.json(), msg)
-        '''
     def test_serve_vd_to_host(self):
         '''
         This method used serve virtual disk to host.
@@ -416,7 +404,7 @@ class Test_ILDC:
         msg = "Virtual disk server to the host"
         if str(res) == '<Response [200]>':
             print(msg)
-            LogCreat().logger_info.info(msg)
+            LogCreate().logger_info.info(msg)
         else:
             self.verification(res, msg)
     def un_server_vd(self):
@@ -434,7 +422,7 @@ class Test_ILDC:
         msg = "Unserve Virtual disk sucessfuly"
         if str(res) == '<Response [200]>':
             print(msg)
-            LogCreat().logger_info.info(msg)
+            LogCreate().logger_info.info(msg)
         else:
             self.verification(res.json(), msg)
     def delete_vd(self):
@@ -448,7 +436,7 @@ class Test_ILDC:
         msg = "Virtual disk deleted"
         if str(res) == '<Response [200]>':
             print(msg)
-            LogCreat().logger_info.info(msg)
+            LogCreate().logger_info.info(msg)
         else:
             self.verification(res.json(), msg)
     def stop_server(self):
@@ -464,8 +452,8 @@ class Test_ILDC:
 
         res = ILDC().do_serve_on_off(uri, header=None, payload=payload_dict)
         msg = "Stop server successfully"
-        test_status = self.verification(res.json(), msg)
-        return test_status
+        self.verification(res.json(), msg)
+
     def start_server(self):
         '''
         This method used to start server.
@@ -478,8 +466,8 @@ class Test_ILDC:
         }
         res = ILDC().do_serve_on_off(uri, header=None, payload=payload_dict)
         msg = "Start server successfully"
-        test_status = self.verification(res.json(), msg)
-        return test_status
+        self.verification(res.json(), msg)
+
     def initialize_vd(self):
         '''
         This method used to initialize virtual disk.
@@ -496,7 +484,7 @@ class Test_ILDC:
                     ILDC().initial_disk(diskindex)
                     msg = "Initialized Virtual disk"
                     print(msg)
-                    LogCreat().logger_info.info(msg)
+                    LogCreate().logger_info.info(msg)
                     break
         return diskindex
                

@@ -18,7 +18,7 @@ import sys
 import datetime
 sys.path.insert(0, os.path.abspath("../../../Lib/VdBenchLib"))
 from execution import Test_ILDC
-from error_log import LogCreat
+from error_log import LogCreate
 from configparser import ConfigParser
 sys.path.insert(0, os.path.abspath("../../../Pacakges"))
 from autologin import AutoLoggin
@@ -57,7 +57,7 @@ class Run():
                 os.system("shutdown /r /t 1")
         else:
             print(msg)
-            LogCreat().logger_error.error(msg)
+            LogCreate().logger_error.error(msg)
     def remove_test_file(self):
         if path.exists(self.config_test) is True:
             os.remove(self.config_test)
