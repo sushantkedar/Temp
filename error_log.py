@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #pylint : disable=E0401
 """
-@author: SUSHANT KEDAR				
+@author: SUSHANT KEDAR
 DATACORE SOFTWARE PVT LTD CONFIDENTIAL
 THIS SPEC IS THE PROPERTY OF DATACORE SOFTWARE PVT LTD.IT SHALL NOT BE
 COPIED, USED,TRANSLATED OR TRANSFERRED IN WHOLE OR IN PART TO ANY THIRD
@@ -12,8 +12,9 @@ Description	:	This script used to log the steps of vdbench
 """
 import logging
 from configparser import ConfigParser
-class LogCreate():
+class LogCreat():
     '''
+    Class:- LogCreat
     This class is going to set levels for vdbench logging (INFO, ERROR)
     and will update details according to level
     Arguments : None
@@ -30,8 +31,10 @@ class LogCreate():
     def log_update(self):
         '''
         This method going to update INFO details of VdBench tool
-        Arguments : None
-        Return: None
+        Returns
+        -------
+        logger : obj
+            return logger object which help to append logs
         '''
         logging.basicConfig(filename=self.file_path, level=logging.INFO,
                             format='%(asctime)s %(levelname)s  %(message)s')
@@ -42,9 +45,11 @@ class LogCreate():
     def error_update(self):
         '''
         This method going to update ERROR details of VdBench tool
-        Arguments : None
-        Return: None
-        '''        
+        Returns
+        -------
+        logger : obj
+            return logger object which help to append logs
+        '''
         logging.basicConfig(filename=self.file_path, level=logging.ERROR,
                             format='%(asctime)s %(levelname)s  %(message)s')
         logger = logging.getLogger(__name__)
