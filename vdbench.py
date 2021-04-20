@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #pylint : disable=E0401
 """
-@author: SUSHANT KEDAR				
+@author: SUSHANT KEDAR
 DATACORE SOFTWARE PVT LTD CONFIDENTIAL
 THIS SPEC IS THE PROPERTY OF DATACORE SOFTWARE PVT LTD.IT SHALL NOT BE
 COPIED, USED,TRANSLATED OR TRANSFERRED IN WHOLE OR IN PART TO ANY THIRD
@@ -19,7 +19,7 @@ path_ = os.path.abspath("../../../Interface/REST")
 sys.path.insert(0, path_)
 from ILDC import ILDC
 sys.path.insert(0, os.path.abspath("../../../Lib/VdBenchLib"))
-from error_log import LogCreate
+from error_log import LogCreat
 
 class VdBenchRun():
     '''
@@ -36,91 +36,128 @@ class VdBenchRun():
         self.time_stamp = configur.get('first run', 'start')
         self.build = ''
         self.new_ = ''
-    def run(self,vd_name, workload, diskindex):
+        self.absulute = ''
+    def run(self, vd_name, workload, diskindex):
         '''
         This method execute workload of VdBench tool.
-        Arguments (str, str, int): vd_name, workload,diskindex
-        
+        Parameters
+        ----------
+        vd_name : str
+            store virtual disk name
+        diskindex : str
+            store virtual disk index
+        workload : str
+            store type of virtual disk
         Return: None
         '''
-        file_name = '4-4k-4-fill.vdb'
-        workload_path, result_path = self.create_file(file_name, vd_name,diskindex, workload)
-        self.run_workload(workload_path, result_path,vd_name,workload)
+        workload_path, result_path = self.create_file('4-4k-4-fill.vdb',
+                                                      vd_name, diskindex, workload)
+        self.run_workload(workload_path, result_path, vd_name, workload)
         if workload.strip() == 'VDI':
-            file_name = 'vdi_fill.vdb'
-            workload_path, result_path = self.create_file(file_name, vd_name,diskindex,workload)
+            workload_path, result_path = self.create_file('vdi_fill.vdb',
+                                                          vd_name, diskindex, workload)
         elif workload.strip() == 'VSI':
-            file_name = 'vsi_fill.vdb'
-            workload_path, result_path = self.create_file(file_name, vd_name,diskindex,workload)
+            workload_path, result_path = self.create_file('vsi_fill.vdb',
+                                                          vd_name, diskindex, workload)
         elif workload.strip() == 'ORACLE':
-            file_name = 'oracle_fill.vdb'
-            workload_path, result_path = self.create_file(file_name, vd_name,diskindex,workload)
+            workload_path, result_path = self.create_file('oracle_fill.vdb',
+                                                          vd_name, diskindex, workload)
         else:
-            file_name = 'sql_fill.vdb'
-            workload_path, result_path = self.create_file(file_name, vd_name,diskindex,workload)
-        self.run_workload(workload_path, result_path,vd_name, workload)
+            workload_path, result_path = self.create_file('sql_fill.vdb',
+                                                          vd_name, diskindex, workload)
+        self.run_workload(workload_path, result_path, vd_name, workload)
 
     def run_workload(self, workload_path, result_path, vd_name, workload):
         '''
         This method run workloads and stores the result
-        Arguments (str, str, str, str): workload_path, result_path, vd_name, workload
-        Return: None
+
+        Parameters
+        ----------
+        workload_path : str
+            path where all vdbench workload config files are stored
+        result_path : str
+            store result path where need to store the vdbench results
+        vd_name : str
+            store virtual disk name
+
+        workload : str
+            store type of virtual disk
+
+        Returns
+        -------
+        None.
+
         '''
         # Config\VdBench_config\Workload
-        path = 'cd ' + self.vdbench_path +'\n'
-        str_ = 'vdbench -f "' + workload_path + '" -o "'+result_path+'"'+"\n"
+        path = 'cd ' +  self.vdbench_path + '\n'
+        str_ = 'vdbench -f "' + workload_path + '" -o "'+ result_path + '"' + "\n"
         ssh = subprocess.Popen(["cmd"],
-                            stdin =subprocess.PIPE,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            universal_newlines=True,
-                            bufsize=0)
+                               stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+                               universal_newlines=True,
+                               bufsize=0)
         # Send ssh commands to stdin
         ssh.stdin.write(path)
         ssh.stdin.write(str_)
         out, err = ssh.communicate()
-        print(out,err)
+        print(out, err)
         ssh.wait()
         if 'Vdbench execution completed successfully' in out:
             if '4-4k-4-fill' not in result_path:
                 msg = workload.upper() + ' workload executed sucessfully'
-                LogCreate().logger_info.info(msg)
+                LogCreat().logger_info.info(msg)
                 new_path = os.path.join(result_path, "flatfile.html")
                 ResultCreation().read_result(new_path, vd_name, workload, self.new_)
             else:
                 msg = '4-4k-4-fill workload executed sucessfully'
-                LogCreate().logger_info.info(msg)
-    def create_file(self,file_name,vd_name,diskindex,workload):
+                LogCreat().logger_info.info(msg)
+    def create_file(self, file_name, vd_name, diskindex, workload):
         '''
         This method create dynamic folder structure to store
         results of VdBench
-        Arguments (str, str, int): file_name,vd_name,diskindex
-        Return (str, str): workload_path, result_path
+
+        Parameters
+        ----------
+        file_name : str
+            it store workload file path
+        vd_name : str
+            store virtual disk name
+        diskindex : str
+            store virtual disk index
+        workload : str
+            store type of virtual disk
+
+        Returns
+        -------
+        workload_path : str
+            store workload path
+        result_path : str
+            store result path where need to store the vdbench results
+
         '''
         uri = "servers"
         res = ILDC().do_ssy_details(uri, header=None)
         self.build = res.json()[0]['ProductBuild']
         workload_path = os.path.abspath(r'../../../Config/VdBench_config/Workload')
         self.absulute = os.path.abspath(r'../../../Result/Vdbench')
-        self.new_ = self.absulute + '/'+self.build+'_'+self.time_stamp+'/'
+        self.new_ = self.absulute + '/' + self.build + '_' + self.time_stamp + '/'
         if file_name.split('.')[0] == '4-4k-4-fill':
-            result_path = self.new_+vd_name+'/'+workload+'_'+file_name.split('.')[0]
+            result_path = self.new_ + vd_name + '/' + workload + '_' + file_name.split('.')[0]
         else:
-            result_path = self.new_+vd_name+'/'+vd_name+'_'+file_name.split('.')[0]
+            result_path = self.new_ + vd_name+'/' + vd_name+'_' + file_name.split('.')[0]
         workload_path = os.path.join(workload_path, file_name)
-        with open(workload_path) as file:
-            # file = open(workload_path, "r+")
-            data = file.readlines()
-            file.close()
-        for index,val in enumerate(data):
+        file = open(workload_path, "r+")
+        data = file.readlines()
+        file.close()
+        for index, val in enumerate(data):
             split_ = val.split('PhysicalDrive')
             if len(split_) > 1:
-                data[index] = split_[0] + "PhysicalDrive" + str(diskindex)+"\n"
-        with open(workload_path, 'w') as file:
-        # file = open(workload_path, "w")
-            for _ in data:
-                file.write(_)
-            file.close()
+                data[index] = split_[0] + "PhysicalDrive" + str(diskindex) + "\n"
+        file = open(workload_path, "w")
+        for _ in data:
+            file.write(_)
+        file.close()
         return workload_path, result_path
 
 class ResultCreation():
@@ -138,93 +175,123 @@ class ResultCreation():
     result_path = ''
     merge_list = []
     zfs_max = ''
-    build = '' 
+    build = ''
     def get_server(self):
         '''
         This method collect all results of SSY required to update
         in HTML file
-        Arguments : None
-        Return: None
+
+        Returns
+        -------
+        None.
+
         '''
+        status_slog = 'OFF'
+        status_encrp = 'OFF'
+        configur = ConfigParser()
+        configur.read(r"../../../Config/VdBench_config/VDBench_config.ini")
+        if configur.get('first run', 'slog_flag') == 'True':
+            status_slog = 'ON'
+        if configur.get('first run', 'enryption_flag') == 'True':
+            status_encrp = 'ON'
         uri = "servers"
         res = ILDC().do_ssy_details(uri, header=None)
         self.build = res.json()[0]['ProductBuild']
         host = res.json()[0]['HostName']
         ram = res.json()[0]['TotalSystemMemory']['Value']
-        ram_ = str(round(int(ram)/1073741824,2))
-        ram_ =ram_ + ' GB'
-        available_memory = res.json()[0]['AvailableSystemMemory']['Value']
+        ram_ = str(round(int(ram)/1073741824, 2))
+        ram_ = ram_ + ' GB'
+        # available = res.json()[0]['AvailableSystemMemory']['Value']
         sync = res.json()[0]['IldcConfigurationData']['IldcSyncMode']
         primaycach = res.json()[0]['IldcConfigurationData']['IldcPrimaryCacheMode']
-        ssy = int(ram) - int(available_memory)
-        ssy = (round((ssy)/1073741824,2))
-        ssy = str(ssy) + ' GB'
+        # ssy = int(ram) - int(available)
+        # ssy = (round((ssy)/1073741824,2))
+        # ssy = str(ssy) + ' GB'
+        ssy = int(ram) * 0.65
         if self.merge_list[0] != '-':
             zfs = int(self.zfs_max)/1073741824
-            zfs = str(round(zfs,2))
+            ssy = int(round((ssy)/1073741824, 2))
+            ssy = ssy - zfs
+            zfs = str(round(zfs, 2))
+            ssy = str(int(ssy)) + ' GB'
             zfs = zfs + ' GB'
         else:
             zfs = '-'
-        vd_size = '500GB'
-        self.data_put = [self.build, host,str(zfs),
-                         str(ssy), primaycach, ram_ , sync, vd_size]
+            ssy = str(int(ssy)) + ' GB'
+        self.data_put = [self.build, host, str(zfs),
+                         str(ssy), primaycach, ram_, sync, '500GB', status_slog , status_encrp]
     def run(self):
         '''
         This method create dynamic folder structure to store results
-        Arguments : None
-        Return: None
+
+        Returns
+        -------
+        None.
+
         '''
         self.get_server()
         configur = ConfigParser()
         configur.read(r"../../../Config/VdBench_config/VDBench_config.ini")
         self.time_stamp = configur.get('first run', 'start')
-        self.destiny = self.result_path+ self.build+'.html'
+        self.destiny = self.result_path + self.build + '.html'
         if configur.get('first run', 'run') == 'False':
             pat = os.path.abspath(r"../../../HTML_Template/VdBench_Template.html")
             self.path = pat
         else:
             pat = os.path.abspath(r"../../../Result/Vdbench")
-            self.path = self.result_path+ self.build+'.html'
-        self.destiny = self.result_path+ self.build+'.html'
-    def read_result(self,new_path,vd_name, workload, result_path):
+            self.path = self.result_path + self.build + '.html'
+        self.destiny = self.result_path + self.build + '.html'
+    def read_result(self, new_path, vd_name, workload, result_path):
         '''
         This method read IOPS, Throughput and latency of workload
-        Arguments (str, str, str, str): new_path,vd_name, workload, result_path
-        Return: None
+
+        Parameters
+        ----------
+        new_path : str
+            path wehere hidden config is stored
+        vd_name : str
+            store name of virtual disk
+        workload : str
+            store type of workload
+        result_path : str
+            path where we have to store result
+
+        Returns
+        -------
+        None.
+
         '''
         self.result_path = result_path
-        with open(new_path) as file1:
-        # file1 = open(new_path,"r+")
-            list_lines = file1.readlines()
-            file1.close()
-        list_data = [0,0,0]
+        file1 = open(new_path, "r+")
+        list_lines = file1.readlines()
+        list_data = [0, 0, 0]
         flag = 0
         for _ in list_lines:
             if _.split()[0] != '*':
                 if flag == 1:
                     list_data[0] = str(round(float(_.split()[5])))
-                    list_data[1] = str(round(float(_.split()[10]),2))
+                    list_data[1] = str(round(float(_.split()[10]), 2))
                     list_data[2] = str(round(float(_.split()[6])))
                 if _.split()[0] == 'tod':
                     flag = 1
         if vd_name.lower().strip() != 'standard':
-            os_mem, ddt, comp, dedup= self.zfs_data()
+            os_mem, ddt, comp, dedup = self.zfs_data()
             self.merge_list = [os_mem, ddt, dedup, comp, list_data[2], list_data[1], list_data[0]]
         else:
-            self.merge_list = ['-','-', '-', '-', list_data[2], list_data[1], list_data[0]]
+            self.merge_list = ['-', '-', '-', '-', list_data[2], list_data[1], list_data[0]]
             self.zfs_max = '-'
         self.start_update_html(vd_name, workload)
     def zfs_data(self):
         '''
-        This method read ZFS data.
+        Thismethod read ZFS data.
         Arguments : None
-        Return (float, float, float, float): os_mem, ddt, comp, dedup
+        Return: None
         '''
         try:
             process = subprocess.Popen('cmd.exe', stdin=subprocess.PIPE,
-                         stdout=subprocess.PIPE, stderr=subprocess.PIPE,encoding = 'utf8',
-                         universal_newlines=True, bufsize=0,
-                         creationflags=subprocess.CREATE_NEW_CONSOLE,shell=False)
+                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                       encoding='utf8', universal_newlines=True, bufsize=0,
+                                       creationflags=subprocess.CREATE_NEW_CONSOLE, shell=False)
             process.stdin.write('cd /d c:\\' + "\n")
             process.stdin.write("cd \"C:/Program Files/DataCore/SANsymphony/zfs\"" + "\n")
             process.stdin.write("zpool status -D" + "\n")
@@ -242,7 +309,7 @@ class ResultCreation():
                 if count == 1:
                     count = 0
                     if 'compressratio' in _.split():
-                        comp =  str(_.split()[-2].strip('x'))
+                        comp = str(_.split()[-2].strip('x'))
                     else:
                         dedup = str(_.split()[-3].strip('x'))
                 if 'dedup: DDT entries' in _:
@@ -255,11 +322,11 @@ class ResultCreation():
                     count = 1
                 if 'zfs_arc_meta_limit' in _:
                     self.zfs_max = _.split()[-1]
-            ddt = str(round(ddt/1048576,2))
-            os_mem = str(round(int(os_mem)/1073741824,2))
+            ddt = str(round(ddt/1048576, 2))
+            os_mem = str(round(int(os_mem)/1073741824, 2))
             return os_mem, ddt, comp, dedup
         except Exception as error:
-            LogCreate().logger_error.error(error)
+            LogCreat().logger_error.error(error)
     def first_temp(self):
         '''
         This method update title of HTML page
@@ -269,13 +336,13 @@ class ResultCreation():
         configur = ConfigParser()
         configur.read(r"../../../Config/VdBench_config/VDBench_config.ini")
         if configur.get('first run', 'run') == 'False':
-            file1 = open(self.path,"r+")
+            file1 = open(self.path, "r+")
             list_lines = file1.readlines()
-            for index,val in enumerate(list_lines):
+            for index, val in enumerate(list_lines):
                 if val.strip() == '<td class="u-align-center u-border-1 '\
                     'u-border-grey-dark-1 u-table-cell"></td>':
                     data_ = '<td class="u-align-center u-border-1 '\
-                        'u-border-grey-dark-1 u-table-cell">'+str(self.data_put[0])+'</td>'
+                        'u-border-grey-dark-1 u-table-cell">' + str(self.data_put[0]) + '</td>'
                     list_lines[index] = data_
                     self.data_put.pop(0)
             with open(self.destiny, "w") as file:
@@ -287,62 +354,77 @@ class ResultCreation():
     def start_update_html(self, virtualdisk, workload):
         '''
         This method append all results in HTML page
-        Arguments (str, str): virtualdisk, workload
+        Parameters
+        ----------
+        workload : str
+            Type of workload
+        virtualdisk : str
+            Type of virtual disk (ILDC/ILC/ILD/STANDARD)
         Return: None
         '''
-        path_html = os.path.abspath("../../..") + '/'+'HTML_Template' + '/'
+        path_html = os.path.abspath("../../..") + '/' + 'HTML_Template' + '/'
         self.run()
         if self.glob_flag == 0:
             self.first_temp()
         print('************************'\
               'VdBench Result Creation Started************************\n')
-        LogCreate().logger_info.info('************************'\
+        LogCreat().logger_info.info('************************'\
                                     'VdBench Result Creation Started************************')
         update = '<td class="u-border-1 u-border-grey-30 u-table-cell u-table-cell-'
-        file1 = open(self.path,"r+")
+        file1 = open(self.path, "r+")
         list_lines = file1.readlines()
         number = self.update_lines(workload, virtualdisk)
-        for index,val in enumerate(list_lines):
+        for index, val in enumerate(list_lines):
             vsi_new = update + str(number)
             if vsi_new in val.strip():
                 data = '<td class="u-border-1 u-border-grey-30'\
                     ' u-table-cell u-table-cell-' + str(number)
-                data =  data+'">'+self.merge_list[0]+"</td>"
+                data = data + '">' + self.merge_list[0] + "</td>"
                 list_lines[index] = data
                 self.merge_list.pop(0)
-                number +=5
+                number += 5
             if val.strip() == '<script class="u-script" type="text/javascript" '\
                 'src="jquery.js" defer=""></script>':
                 list_lines[index] = '<script class="u-script" type="text/javascript" '\
-                    'src=""'+path_html+'jquery.js" defer=""></script>'
+                    'src=""' + path_html + 'jquery.js" defer=""></script>'
             if val.strip() == '<link rel="stylesheet" href="nicepage.css" media="screen">':
                 list_lines[index] = '<link rel="stylesheet" '\
-                    'href="'+path_html+'nicepage.css" media="screen">'
+                    'href="' + path_html+'nicepage.css" media="screen">'
             if val.strip() == '<link rel="stylesheet" href="VdBench.css" media="screen">':
                 list_lines[index] = '<link rel="stylesheet"'\
-                    ' href="'+path_html+'VdBench.css" media="screen">'
+                    ' href="' + path_html + 'VdBench.css" media="screen">'
             if val.strip() == '<script class="u-script" type="text/javascript" '\
                 'src="nicepage.js" defer=""></script>':
                 list_lines[index] = '<script class="u-script" type="text/javascript" '\
-                    'src="href="'+path_html+'nicepage.js" defer=""></script>'
+                    'src="href="' + path_html + 'nicepage.js" defer=""></script>'
             if val.strip() == '<img class="u-image u-image-1" src="images/new.png" '\
                 'data-image-width="539" data-image-height="136">':
                 list_lines[index] = '<img class="u-image u-image-1" '\
-                    'src="'+path_html+'images/new.png" '\
+                    'src="'+path_html + 'images/new.png" '\
                         'data-image-width="539" data-image-height="136">'
         with open(self.destiny, "w") as file:
             for item in list_lines:
                 file.write("%s\n" % item)
         file.close()
         msg = self.build + ' Result created succesfully'
-        LogCreate().logger_info.info(msg)
+        LogCreat().logger_info.info(msg)
         # except Exception as error:
-        #     LogCreate().logger_error.error(error)
+        #     LogCreat().logger_error.error(error)
     def update_lines(self, workload, virtualdisk):
         '''
         This method append all results in HTML page
-        Arguments (str, str): virtualdisk, workload
-        Return: None
+
+        Parameters
+        ----------
+        workload : str
+            Type of workload
+        virtualdisk : str
+            Type of virtual disk (ILDC/ILC/ILD/STANDARD)
+
+        Returns
+        -------
+        number : int
+            line nubere where need to update data
         '''
         number = 0
         if workload.lower().strip() == 'vsi':
@@ -361,8 +443,20 @@ class ResultCreation():
     def repeate_loop(self, number, virtualdisk, start):
         '''
         This method append all results in HTML page
-        Arguments (int, str, int): number, virtualdisk, start
-        Return: None
+        Parameters
+        ----------
+        number : int
+            store line no for HTML page
+        virtualdisk : str
+            Type of virtual disk (ILDC/ILC/ILD/STANDARD)
+        start : int
+            start point of colum which used for HTML page
+
+        Returns
+        -------
+        number : int
+            line nubere where need to update data
+
         '''
         if virtualdisk.lower().strip() == 'ildc':
             number = start+1
